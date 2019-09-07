@@ -11,16 +11,32 @@ function loadScript(callback) {
 
 function unleashGremlins(ttl, callback) {
   function stop() {
-    horde.stop();
-    callback();
+      horde.stop();
+      callback();
   }
   var horde = window.gremlins.createHorde();
   horde.seed(1234);
 
   horde.after(callback);
   window.onbeforeunload = stop;
-  setTimeout(stop, ttl);
-  horde.unleash();
+  
+ window.gremlins.createHorde()
+  .allGremlins()
+  .gremlin(function() {
+    var forms = document.querySelectorAll('form');
+    var formElement = forms[Math.floor(Math.random()*forms.length)];
+   
+    var evt = document.createEvent('HTMLEvents');
+    evt.initEvent('submit');
+    formElement.dispatchEvent(evt); 
+    console.log('gremlin submit ', formElement);
+  })
+  .gremlin(gremlins.species.clicker().clickTypes(['click'])//botones y links
+    .canClick((element) => {
+      console.log(":->  "+element.tagName);
+      return element.tagName.toLowerCase() === 'a' || element.tagName.toLowerCase() === 'button';
+  }))
+  .unleash();
 }
 
 describe('Monkey testing with gremlins ', function() {
@@ -29,11 +45,12 @@ describe('Monkey testing with gremlins ', function() {
     browser.url('/');
     browser.click('button=Cerrar');
 
+    browser.timeoutsAsyncScript(100000);
+    
     browser.timeoutsAsyncScript(60000);
     browser.executeAsync(loadScript);
-
-    browser.timeoutsAsyncScript(60000);
-    browser.executeAsync(unleashGremlins, 50000);
+    browser.click('button=Ingresar');
+    browser.executeAsync(unleashGremlins, 5000);
   });
 
   afterAll(function() {
